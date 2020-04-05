@@ -14,7 +14,7 @@ import {
   Keyboard
 } from 'react-native';
 import Style from './style';
-import Moment from 'moment';
+var Moment = require('moment-timezone');
 
 const FORMATS = {
   'date': 'YYYY-MM-DD',
@@ -48,6 +48,11 @@ class DatePicker extends Component {
     this.onDatetimePicked = this.onDatetimePicked.bind(this);
     this.onDatetimeTimePicked = this.onDatetimeTimePicked.bind(this);
     this.setModalVisible = this.setModalVisible.bind(this);
+
+    if(props.tz){
+      Moment.tz.setDefault(props.tz);
+      this.state.tz = props.tz;
+    }
   }
 
   componentWillReceiveProps(nextProps) {
@@ -148,7 +153,7 @@ class DatePicker extends Component {
   }
 
   getDateStr(date = this.props.date) {
-    const {mode, format = FORMATS[mode]} = this.props;
+    const {mode, tz, format = FORMATS[mode]} = this.props;
 
     const dateInstance = date instanceof Date
       ? date
@@ -156,6 +161,10 @@ class DatePicker extends Component {
 
     if (typeof this.props.getDateStr === 'function') {
       return this.props.getDateStr(dateInstance);
+    }
+
+    if(tz){
+      return Moment(dateInstance).tz(tz).format(format);
     }
 
     return Moment(dateInstance).format(format);
@@ -276,7 +285,11 @@ class DatePicker extends Component {
       } else if (mode === 'time') {
         // 选时间
 
+
         let timeMoment = Moment(this.state.date);
+        if(this.props.tz){
+          timeMoment = timeMoment.tz(this.props.tz);
+        }
 
         TimePickerAndroid.open({
           hour: timeMoment.hour(),
